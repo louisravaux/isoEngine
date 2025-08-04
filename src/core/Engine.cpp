@@ -1,5 +1,6 @@
 #include "Engine.hpp"
 #include "SDL3/SDL_init.h"
+#include "SDL3/SDL_log.h"
 
 IsoEngine::IsoEngine() {
 
@@ -18,42 +19,179 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
+    // // Initialize SDL_image for loading PNG/JPG files
+    // if (!IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG)) {
+    //     SDL_Log("Couldn't initialize SDL_image: %s", SDL_GetError());
+    //     return SDL_APP_FAILURE;
+    // }
+
     if (!SDL_CreateWindowAndRenderer("IsoEngine", WIN_WIDTH, WIN_HEIGHT, 0, &window, &renderer)) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+
+    // Load cursor texture
+    SDL_Surface* cursorSurface = IMG_Load("assets/cursor.png");
+    if (cursorSurface) {
+        cursorTexture = SDL_CreateTextureFromSurface(renderer, cursorSurface);
+        SDL_DestroySurface(cursorSurface);
+        if (!cursorTexture) {
+            SDL_Log("Failed to create cursor texture: %s", SDL_GetError());
+        }
+        SDL_SetTextureScaleMode(cursorTexture, SDL_SCALEMODE_NEAREST);
+
+    } else {
+        SDL_Log("Failed to load cursor.png: %s", SDL_GetError());
+    }
+
+    // Create a small test map (5x5 tiles)
+    gameMap = std::make_unique<Map>(20, 20);
+    
+    // Fill the map with texture tiles
+    // Create a simple checkerboard pattern
+    for (int y = 0; y < 20; ++y) {
+        for (int x = 0; x < 20; ++x) {
+            if ((x + y) % 2 == 0) {
+                // Use grass texture for even positions
+                gameMap->setTile(x, y, renderer, "assets/dirt.png", 1);
+            } else {
+                // Use stone texture for odd positions  
+                gameMap->setTile(x, y, renderer, "assets/sand.png", 2);
+            }
+        }
+    }
+    
+    // Add a special water tile in the center
+    gameMap->setTile(2, 2, renderer, "assets/water.png", 3);
+
+    // Center the camera on the map
+    gameMap->setCamera(-600, -50);
 
     return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event) 
 {
-        if (event->type == SDL_EVENT_QUIT) {
-        return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
+    if (event->type == SDL_EVENT_QUIT) {
+        return SDL_APP_SUCCESS;
     }
+    
+    // Handle mouse movement for tile selection
+    if (event->type == SDL_EVENT_MOUSE_MOTION) {
+        mouseX = static_cast<int>(event->motion.x);
+        mouseY = static_cast<int>(event->motion.y);
+        
+        // Use precise diamond hit detection
+        int gridX, gridY;
+        if (gameMap->getSelectedTile(mouseX, mouseY, gameMap->getCameraX(), gameMap->getCameraY(), gridX, gridY)) {
+            selectedTileX = gridX;
+            selectedTileY = gridY;
+        } else {
+            selectedTileX = -1; // No valid tile selected
+            selectedTileY = -1;
+        }
+    }
+    
+    // Handle mouse clicks (optional - for feedback)
+    if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+        if (event->button.button == SDL_BUTTON_LEFT) {
+            if (selectedTileX >= 0 && selectedTileY >= 0) {
+                SDL_Log("Clicked tile at (%d, %d)", selectedTileX, selectedTileY);
+                SDL_Log("Screen position: (%d, %d)", mouseX, mouseY);
+                SDL_Log("Camera position: (%f, %f)", gameMap->getCameraX(), gameMap->getCameraY());
+                SDL_Log("Tile screen position: (%d, %d)", gameMap->getTile(selectedTileX, selectedTileY)->getScreenX(), gameMap->getTile(selectedTileX, selectedTileY)->getScreenY());
+
+                // You could add tile interaction here, like changing tile type
+                //gameMap->setTile(selectedTileX, selectedTileY, renderer, "assets/sand.png", 4);
+            }
+        }
+    }
+    
+    // Simple camera controls with arrow keys
+    if (event->type == SDL_EVENT_KEY_DOWN) {
+        const float cameraSpeed = 10.0f;
+        switch (event->key.key) {
+            case SDLK_LEFT:
+                gameMap->moveCamera(-cameraSpeed, 0);
+                break;
+            case SDLK_RIGHT:
+                gameMap->moveCamera(cameraSpeed, 0);
+                break;
+            case SDLK_UP:
+                gameMap->moveCamera(0, -cameraSpeed);
+                break;
+            case SDLK_DOWN:
+                gameMap->moveCamera(0, cameraSpeed);
+                break;
+        }
+    }
+    
     return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult IsoEngine::EngineIterate(void *appstate) 
 {
-    const double now = ((double)SDL_GetTicks()) / 1000.0;  /* convert from milliseconds to seconds. */
-    /* choose the color for the frame we will draw. The sine wave trick makes it fade between colors smoothly. */
-    const float red = (float) (0.5 + 0.5 * SDL_sin(now));
-    const float green = (float) (0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
-    const float blue = (float) (0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
-    SDL_SetRenderDrawColorFloat(renderer, red, green, blue, SDL_ALPHA_OPAQUE_FLOAT);  /* new color, full alpha. */
-
-    /* clear the window to the draw color. */
+    // Clear screen to black
+    SDL_SetRenderDrawColor(renderer, 255, 255, 200, 255);
     SDL_RenderClear(renderer);
 
-    /* put the newly-cleared rendering on the screen. */
+    // Render the map
+    if (gameMap) {
+        gameMap->renderWithCamera(renderer, gameMap->getCameraX(), gameMap->getCameraY());
+        
+        // Render cursor on selected tile
+        if (cursorTexture && selectedTileX >= 0 && selectedTileY >= 0) {
+            // Get the actual tile at this position
+            Tile* selectedTile = gameMap->getTile(selectedTileX, selectedTileY);
+            if (selectedTile) {
+                // Use the exact same positioning as the tile itself
+                int tileScreenX = selectedTile->getScreenX();
+                int tileScreenY = selectedTile->getScreenY();
+                
+                // Apply the same camera offset as the map does
+                float cursorX = static_cast<float>(tileScreenX) - gameMap->getCameraX();
+                float cursorY = static_cast<float>(tileScreenY) - gameMap->getCameraY();
+                
+                // Use the same size as your tiles
+                const float CURSOR_SIZE = 64.0f;
+                
+                SDL_FRect cursorRect = {
+                    cursorX,
+                    cursorY,
+                    CURSOR_SIZE,
+                    CURSOR_SIZE/2
+                };
+                
+                SDL_RenderTexture(renderer, cursorTexture, nullptr, &cursorRect);
+            }
+        }
+    }
+
+    // Present the frame
     SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE;
 }
 
-// runs at shutdown
 void IsoEngine::EngineQuit(void *appstate, SDL_AppResult result) 
 {
-
+    // Cleanup
+    gameMap.reset(); // Destroy the map (automatic with unique_ptr)
+    
+    if (cursorTexture) {
+        SDL_DestroyTexture(cursorTexture);
+        cursorTexture = nullptr;
+    }
+    
+    if (renderer) {
+        SDL_DestroyRenderer(renderer);
+        renderer = nullptr;
+    }
+    
+    if (window) {
+        SDL_DestroyWindow(window);
+        window = nullptr;
+    }
+    
+    SDL_Quit();
 }
