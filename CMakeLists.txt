@@ -10,7 +10,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 add_subdirectory(SDL EXCLUDE_FROM_ALL)
 
 # Create your game executable target as usual
-add_executable(isoEngine WIN32 src/main.cpp)
+add_executable(isoEngine src/core/Engine.cpp src/main.cpp)
 
 # Link to the actual SDL3 library.
 target_link_libraries(isoEngine PRIVATE SDL3::SDL3)
