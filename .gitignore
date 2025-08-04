@@ -2,4 +2,6 @@
 
 .cache/
 build/
+
 SDL/
+SDL_image/
