@@ -1,6 +1,7 @@
 #include "Engine.hpp"
 #include "SDL3/SDL_init.h"
 #include "SDL3/SDL_log.h"
+#include "SDL3/SDL_mouse.h"
 
 IsoEngine::IsoEngine() {
 
@@ -19,16 +20,23 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
-    // // Initialize SDL_image for loading PNG/JPG files
-    // if (!IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG)) {
-    //     SDL_Log("Couldn't initialize SDL_image: %s", SDL_GetError());
-    //     return SDL_APP_FAILURE;
-    // }
-
+    // Create a window and renderer
     if (!SDL_CreateWindowAndRenderer("IsoEngine", WIN_WIDTH, WIN_HEIGHT, 0, &window, &renderer)) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+
+    // Set vsync
+    if (SDL_SetRenderVSync(renderer, SDL_RENDERER_VSYNC_ADAPTIVE)) {
+        SDL_Log("Couldn't enable VSync: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    // hide mouse cursor
+    SDL_HideCursor();
+
+    // set window resizeable
+    SDL_SetWindowResizable(window, true);
 
     // Load cursor texture
     SDL_Surface* cursorSurface = IMG_Load("assets/cursor.png");
@@ -44,7 +52,7 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
         SDL_Log("Failed to load cursor.png: %s", SDL_GetError());
     }
 
-    // Create a small test map (5x5 tiles)
+    // Create a small test map
     gameMap = std::make_unique<Map>(20, 20);
     
     // Fill the map with texture tiles
@@ -65,7 +73,7 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
     gameMap->setTile(2, 2, renderer, "assets/water.png", 3);
 
     // Center the camera on the map
-    gameMap->setCamera(-600, -50);
+    gameMap->setCamera(-600, 0);
 
     return SDL_APP_CONTINUE;
 }
