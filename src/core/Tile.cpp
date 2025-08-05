@@ -1,10 +1,11 @@
 // Tile.cpp
 #include "Tile.hpp"
 #include <iostream>
+#include "utils/Math.hpp"
 
 // Isometric tile constants
-const int TILE_WIDTH = 64;   // Width of isometric tile sprite
-const int TILE_HEIGHT = 64;  // Height of isometric tile sprite
+constexpr int TILE_WIDTH = 64;   // Width of isometric tile sprite
+constexpr int TILE_HEIGHT = 64;  // Height of isometric tile sprite
 
 // Constructor - loads texture from file
 Tile::Tile(SDL_Renderer* renderer, const char* imagePath, int id, int posX, int posY)
@@ -104,7 +105,5 @@ void Tile::setID(int id) {
 }
 
 void Tile::updateScreenPosition() {
-    // Isometric coordinate conversion
-    screenX = (gridX - gridY) * TILE_WIDTH / 2;
-    screenY = (gridX + gridY) * TILE_HEIGHT / 4;
+    Math::toScreenCoordinates(TILE_WIDTH, TILE_HEIGHT, gridX, gridY, screenX, screenY);
 }
