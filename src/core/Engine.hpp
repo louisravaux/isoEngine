@@ -20,8 +20,12 @@ public:
     IsoEngine();
     ~IsoEngine();
 
-    // Cursor and selection
+    // Cursors
     SDL_Texture* cursorTexture = nullptr;
+    SDL_Texture* mouseCursorTexture = nullptr;
+
+
+    // selection
     int selectedTileX = -1;  // -1 means no tile selected
     int selectedTileY = -1;
     int mouseX = 0, mouseY = 0;

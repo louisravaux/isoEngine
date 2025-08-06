@@ -38,6 +38,20 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
     // set window resizeable
     SDL_SetWindowResizable(window, true);
 
+    // Load mouse cursor texture
+    SDL_Surface* mouseCursorSurface = IMG_Load("assets/mouse-cursor.png");
+    if (mouseCursorSurface) {
+        mouseCursorTexture = SDL_CreateTextureFromSurface(renderer, mouseCursorSurface);
+        SDL_DestroySurface(mouseCursorSurface);
+        if (!mouseCursorTexture) {
+            SDL_Log("Failed to create mouse cursor texture: %s", SDL_GetError());
+        }
+        SDL_SetTextureScaleMode(mouseCursorTexture, SDL_SCALEMODE_NEAREST);
+
+    } else {
+        SDL_Log("Failed to load mouse cursor.png: %s", SDL_GetError());
+    }    
+
     // Load cursor texture
     SDL_Surface* cursorSurface = IMG_Load("assets/cursor.png");
     if (cursorSurface) {
@@ -73,7 +87,7 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
     gameMap->setTile(2, 2, renderer, "assets/water.png", 3);
 
     // Center the camera on the map
-    gameMap->setCamera(-600, 0);
+    gameMap->setCamera(-WIN_WIDTH/2.0f, -16.0f);
 
     return SDL_APP_CONTINUE;
 }
@@ -89,7 +103,6 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
         mouseX = static_cast<int>(event->motion.x);
         mouseY = static_cast<int>(event->motion.y);
         
-        // Use precise diamond hit detection
         int gridX, gridY;
         if (gameMap->getSelectedTile(mouseX, mouseY, gameMap->getCameraX(), gameMap->getCameraY(), gridX, gridY)) {
             selectedTileX = gridX;
@@ -157,7 +170,7 @@ SDL_AppResult IsoEngine::EngineIterate(void *appstate)
                 int tileScreenY = selectedTile->getScreenY();
                 
                 // Apply the same camera offset as the map does
-                float cursorX = static_cast<float>(tileScreenX) - gameMap->getCameraX();
+                float cursorX = static_cast<float>(tileScreenX - 64 * 0.5) - gameMap->getCameraX();
                 float cursorY = static_cast<float>(tileScreenY) - gameMap->getCameraY();
                 
                 // Use the same size as your tiles
@@ -174,6 +187,16 @@ SDL_AppResult IsoEngine::EngineIterate(void *appstate)
             }
         }
     }
+
+       // draw mouse cursor
+    SDL_FRect mouseCursorRect = {
+        static_cast<float>(mouseX) - 16.0f,
+        static_cast<float>(mouseY) - 16.0f,
+        32.0f, // Width of the cursor
+        32.0f  // Height of the cursor
+    };
+    SDL_RenderTexture(renderer, mouseCursorTexture, nullptr, &mouseCursorRect);
+
 
     // Present the frame
     SDL_RenderPresent(renderer);
