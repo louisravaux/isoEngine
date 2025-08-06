@@ -1,10 +1,11 @@
 // Map.cpp
 #include "Map.hpp"
+#include "utils/Math.hpp"
 #include <iostream>
 
 // Tile constants (should match Tile.cpp)
-const int TILE_WIDTH = 64;
-const int TILE_HEIGHT = 64;
+constexpr int TILE_WIDTH = 64;
+constexpr int TILE_HEIGHT = 64;
 
 // Constructor - creates empty map
 Map::Map(int width, int height) 
@@ -20,7 +21,7 @@ Map::Map(int width, int height)
 
 // Destructor
 Map::~Map() {
-    // unique_ptr automatically cleans up, nothing needed here
+    
 }
 
 // Helper method to check if coordinates are valid
@@ -175,83 +176,23 @@ void Map::fillWithTile(SDL_Renderer* renderer, const char* imagePath, int tileID
 
 // Convert screen coordinates to grid coordinates
 void Map::screenToGrid(int screenX, int screenY, int& gridX, int& gridY) const {
-    // Apply camera offset first
-    float adjustedX = screenX + cameraX;
-    float adjustedY = screenY + cameraY;
-    
-    // Inverse isometric transformation
-    // Given: screenX = (gridX - gridY) * (TILE_WIDTH / 2)
-    //        screenY = (gridX + gridY) * (TILE_HEIGHT / 2)
-    // Solve for gridX, gridY
-    
-    float tileX = adjustedX / (TILE_WIDTH / 2.0f);
-    float tileY = adjustedY / (TILE_HEIGHT / 2.0f);
-    
-    gridX = static_cast<int>((tileX + tileY) / 2.0f);
-    gridY = static_cast<int>((tileY - tileX) / 2.0f);
+    Math::toGridCoordinates(TILE_WIDTH, TILE_HEIGHT, screenX, screenY, gridX, gridY);
 }
 
 // Convert grid coordinates to screen coordinates
 void Map::gridToScreen(int gridX, int gridY, int& screenX, int& screenY) const {
-    // Standard isometric transformation
-    screenX = (gridX - gridY) * (TILE_WIDTH / 2);
-    screenY = (gridX + gridY) * (TILE_HEIGHT / 2);
-}
-
-
-bool Map::isPointInDiamond(float pointX, float pointY, int tileX, int tileY) const {
-    
-    // Translate point to tile-local coordinates
-    float localX = pointX - tileX;
-    float localY = pointY - tileY;
-    
-    // Diamond hit detection - check if point is within diamond bounds
-    float centerX = TILE_WIDTH / 2.0f;
-    float centerY = TILE_HEIGHT / 4.0f;
-    
-    // Diamond equation: |x - centerX|/halfWidth + |y - centerY|/halfHeight <= 1
-    float normalizedX = abs(localX - centerX) / centerX;
-    float normalizedY = abs(localY - centerY) / centerY;
-    
-    return (normalizedX + normalizedY) <= 1.0f;
+    Math::toScreenCoordinates(TILE_WIDTH, TILE_HEIGHT, gridX, gridY, screenX, screenY);
 }
 
 bool Map::getSelectedTile(int screenX, int screenY, float cameraX, float cameraY, int& gridX, int& gridY) const {
-    // Adjust for camera
-    float adjustedX = screenX + cameraX;
-    float adjustedY = screenY + cameraY;
-    
-    // First, get approximate grid position using standard conversion
-    float tileX = adjustedX / (TILE_WIDTH/2.0f);  // Half tile width
-    float tileY = adjustedY / (TILE_HEIGHT/4.0f);   // Quarter tile height
-    
-    int approxGridX = static_cast<int>((tileX + tileY) / 2.0f);
-    int approxGridY = static_cast<int>((tileY - tileX) / 2.0f);
-    
-    // Check a 3x3 area around the approximate position for more precision
-    for (int dy = -1; dy <= 1; dy++) {
-        for (int dx = -1; dx <= 1; dx++) {
-            int testGridX = approxGridX + dx;
-            int testGridY = approxGridY + dy;
-            
-            // Skip if out of bounds
-            if (testGridX < 0 || testGridX >= mapWidth || testGridY < 0 || testGridY >= mapHeight) {
-                continue;
-            }
-            
-            // Convert back to screen coordinates for this tile
-            int tileScreenX = (testGridX - testGridY) * (TILE_WIDTH/2);
-            int tileScreenY = (testGridX + testGridY) * (TILE_HEIGHT/4);
-            
-            // Check if point is within diamond shape of this tile
-            if (isPointInDiamond(adjustedX, adjustedY, tileScreenX, tileScreenY)) {
-                gridX = testGridX;
-                gridY = testGridY;
-                return true;
-            }
-        }
+
+     // Convert directly (no camera offset since camera is 0,0)
+    screenToGrid(screenX + cameraX, screenY + cameraY, gridX, gridY);
+
+    // Check if resulting grid coordinates are valid
+    if (gridX < 0 || gridY < 0 || gridX >= mapWidth || gridY >= mapHeight) {
+        return false;
     }
     
-    return false; // No tile selected
+    return true;
 }
-

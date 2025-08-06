@@ -16,7 +16,6 @@ private:
     
     // Helper method to check if coordinates are valid
     bool isValidPosition(int x, int y) const;
-    bool isPointInDiamond(float pointX, float pointY, int tileX, int tileY) const;
 
 public:
     // Constructor - creates empty map
