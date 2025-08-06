@@ -111,7 +111,7 @@ void Map::renderWithCamera(SDL_Renderer* renderer, float camX, float camY) {
                 
                 // Apply camera offset
                 SDL_FRect destRect = {
-                    static_cast<float>(tileScreenX) - cameraX,
+                    static_cast<float>(tileScreenX - TILE_WIDTH * 0.5f) - cameraX, // Align to center
                     static_cast<float>(tileScreenY) - cameraY,
                     static_cast<float>(TILE_WIDTH),
                     static_cast<float>(TILE_HEIGHT)
