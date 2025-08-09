@@ -3,6 +3,8 @@
 #include "SDL3/SDL_log.h"
 #include "SDL3/SDL_mouse.h"
 
+#include "ui/UIManager.hpp"
+
 IsoEngine::IsoEngine() {
 
 }
@@ -89,6 +91,9 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
     // Center the camera on the map
     gameMap->setCamera(-WIN_WIDTH/2.0f, -16.0f);
 
+    // Initialize UI Manager
+    uiManager->init(window, renderer);
+
     return SDL_APP_CONTINUE;
 }
 
@@ -112,9 +117,13 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
             selectedTileY = -1;
         }
     }
-    
+
+    // Handle UI events
+    uiManager->event(event);
+
     // Handle mouse clicks
     if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+
         if (event->button.button == SDL_BUTTON_LEFT) {
             if (selectedTileX >= 0 && selectedTileY >= 0) {
                 SDL_Log("Clicked tile at (%d, %d)", selectedTileX, selectedTileY);
@@ -152,6 +161,9 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
 
 SDL_AppResult IsoEngine::EngineIterate(void *appstate) 
 {
+
+    uiManager->update();
+
     // Clear screen to black
     SDL_SetRenderDrawColor(renderer, 255, 255, 200, 255);
     SDL_RenderClear(renderer);
@@ -196,6 +208,8 @@ SDL_AppResult IsoEngine::EngineIterate(void *appstate)
     };
     SDL_RenderTexture(renderer, mouseCursorTexture, nullptr, &mouseCursorRect);
 
+    uiManager->content();
+    uiManager->render(renderer);
 
     // Present the frame
     SDL_RenderPresent(renderer);
@@ -222,6 +236,10 @@ void IsoEngine::EngineQuit(void *appstate, SDL_AppResult result)
         SDL_DestroyWindow(window);
         window = nullptr;
     }
-    
+
+    uiManager->shutdown();
+
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
     SDL_Quit();
 }

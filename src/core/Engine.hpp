@@ -7,6 +7,8 @@
 #include <SDL3/SDL.h>
 #include <memory>
 
+#include "ui/UIManager.hpp"
+
 class IsoEngine {
 
 private:
@@ -15,6 +17,8 @@ private:
 
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
+
+    UIManager *uiManager = nullptr;
 
 public:
     IsoEngine();
