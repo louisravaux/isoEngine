@@ -44,6 +44,7 @@ add_executable(isoEngine
     src/core/Tile.cpp
     src/utils/Math.cpp
     src/UI/UIManager.cpp
+    src/UI/UIDebug.cpp
 )
 
 # Include directories for your game

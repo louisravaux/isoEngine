@@ -12,7 +12,7 @@ class  UIManager {
         ~UIManager();
 
         void init(SDL_Window *window, SDL_Renderer *renderer);
-        void content();
+        virtual void content();
         void event(SDL_Event *event);
         void update();
         void render(SDL_Renderer *renderer);
