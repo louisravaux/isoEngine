@@ -20,6 +20,9 @@ void UIManager::init(SDL_Window *window, SDL_Renderer *renderer) {
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 
+    // disable imgui ini
+    io.IniFilename = nullptr;
+
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsLight();
