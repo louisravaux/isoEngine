@@ -8,13 +8,12 @@
 class Tile {
 
 private: 
-    SDL_Texture* sprite;
-    int tileID; // type identifier
+    SDL_Texture* sprite; // Texture for the tile
+    int tileID; // ID of the tile type
     int gridX, gridY;    // Position in tile grid (0,0), (1,0), etc.
     int screenX, screenY; // Actual screen position in pixels
 
 public:
-
     // Constructor to initialize the tile with a texture, ID, and position
     Tile(SDL_Renderer* renderer, const char* imagePath, int id, int posX, int posY);
 
@@ -41,6 +40,4 @@ public:
     // Setters for tile properties
     void setPosition(int posX, int posY);
     void setID(int id);
-
-
 };

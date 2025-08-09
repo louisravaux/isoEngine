@@ -37,6 +37,9 @@ Tile::Tile(SDL_Renderer* renderer, const char* imagePath, int id, int posX, int 
 // Constructor - uses existing texture
 Tile::Tile(SDL_Texture* texture, int id, int posX, int posY)
     : sprite(texture), tileID(id), gridX(posX), gridY(posY) {
+
+    screenX = 0;
+    screenY = 0;
     
     // Calculate screen position from grid position
     updateScreenPosition();

@@ -8,7 +8,7 @@ constexpr int TILE_WIDTH = 64;
 constexpr int TILE_HEIGHT = 64;
 
 // Constructor - creates empty map
-Map::Map(int width, int height) 
+Map::Map(int width, int height)
     : mapWidth(width), mapHeight(height), cameraX(0.0f), cameraY(0.0f) {
     
     // Initialize 2D vector with empty tiles
@@ -36,7 +36,7 @@ void Map::setTile(int x, int y, std::unique_ptr<Tile> tile) {
         return;
     }
     
-    // Move the unique_ptr (old tile automatically destroyed if exists)
+    // Move the unique_ptr
     tiles[y][x] = std::move(tile);
 }
 

@@ -68,7 +68,7 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
 
     // Create a small test map
     gameMap = std::make_unique<Map>(20, 20);
-    
+
     // Fill the map with texture tiles
     // Create a simple checkerboard pattern
     for (int y = 0; y < 20; ++y) {
@@ -77,7 +77,7 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
                 // Use grass texture for even positions
                 gameMap->setTile(x, y, renderer, "assets/dirt.png", 1);
             } else {
-                // Use stone texture for odd positions  
+                // Use stone texture for odd positions
                 gameMap->setTile(x, y, renderer, "assets/sand.png", 2);
             }
         }
@@ -107,13 +107,13 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
         if (gameMap->getSelectedTile(mouseX, mouseY, gameMap->getCameraX(), gameMap->getCameraY(), gridX, gridY)) {
             selectedTileX = gridX;
             selectedTileY = gridY;
-        } else {
-            selectedTileX = -1; // No valid tile selected
+        } else { // No valid tile selected
+            selectedTileX = -1;
             selectedTileY = -1;
         }
     }
     
-    // Handle mouse clicks (optional - for feedback)
+    // Handle mouse clicks
     if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
         if (event->button.button == SDL_BUTTON_LEFT) {
             if (selectedTileX >= 0 && selectedTileY >= 0) {
@@ -130,7 +130,7 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
     
     // Simple camera controls with arrow keys
     if (event->type == SDL_EVENT_KEY_DOWN) {
-        const float cameraSpeed = 10.0f;
+        const float cameraSpeed = 32.0f;
         switch (event->key.key) {
             case SDLK_LEFT:
                 gameMap->moveCamera(-cameraSpeed, 0);
@@ -168,13 +168,12 @@ SDL_AppResult IsoEngine::EngineIterate(void *appstate)
                 // Use the exact same positioning as the tile itself
                 int tileScreenX = selectedTile->getScreenX();
                 int tileScreenY = selectedTile->getScreenY();
+
+                const float CURSOR_SIZE = 64.0f;
                 
                 // Apply the same camera offset as the map does
-                float cursorX = static_cast<float>(tileScreenX - 64 * 0.5) - gameMap->getCameraX();
+                float cursorX = static_cast<float>(tileScreenX - CURSOR_SIZE * 0.5) - gameMap->getCameraX();
                 float cursorY = static_cast<float>(tileScreenY) - gameMap->getCameraY();
-                
-                // Use the same size as your tiles
-                const float CURSOR_SIZE = 64.0f;
                 
                 SDL_FRect cursorRect = {
                     cursorX,
@@ -188,7 +187,7 @@ SDL_AppResult IsoEngine::EngineIterate(void *appstate)
         }
     }
 
-       // draw mouse cursor
+    // draw mouse cursor
     SDL_FRect mouseCursorRect = {
         static_cast<float>(mouseX) - 16.0f,
         static_cast<float>(mouseY) - 16.0f,
@@ -207,7 +206,7 @@ SDL_AppResult IsoEngine::EngineIterate(void *appstate)
 void IsoEngine::EngineQuit(void *appstate, SDL_AppResult result) 
 {
     // Cleanup
-    gameMap.reset(); // Destroy the map (automatic with unique_ptr)
+    gameMap.reset(); // Destroy the map
     
     if (cursorTexture) {
         SDL_DestroyTexture(cursorTexture);

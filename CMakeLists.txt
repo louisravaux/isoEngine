@@ -22,7 +22,7 @@ add_executable(isoEngine
     src/utils/Math.cpp
 )
 
-# Configurer les répertoires d'inclusion
+# Include directory
 target_include_directories(isoEngine PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
