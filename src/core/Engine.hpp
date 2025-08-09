@@ -7,7 +7,7 @@
 #include <SDL3/SDL.h>
 #include <memory>
 
-#include "ui/UIManager.hpp"
+#include "ui/UIDebug.hpp"
 
 class IsoEngine {
 
@@ -18,7 +18,7 @@ private:
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
 
-    UIManager *uiManager = nullptr;
+    std::unique_ptr<UIManager> uiManager = std::make_unique<UIDebug>();
 
 public:
     IsoEngine();

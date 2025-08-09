@@ -91,6 +91,8 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
     // Center the camera on the map
     gameMap->setCamera(-WIN_WIDTH/2.0f, -16.0f);
 
+    uiManager = std::make_unique<UIDebug>();
+    
     // Initialize UI Manager
     uiManager->init(window, renderer);
 
