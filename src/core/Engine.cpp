@@ -73,11 +73,12 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
     int layerNumber = 2;
     gameMap = std::make_unique<Map>(8, 8, layerNumber);
 
-    TileRegistry::registerType(0, "Void", renderer, "");
+    TileRegistry::registerType(0, "Void", renderer, "assets/void.png");
     TileRegistry::registerType(1, "Grass", renderer, "assets/grass.png");
     TileRegistry::registerType(2, "Sand", renderer, "assets/sand.png");
     TileRegistry::registerType(3, "Water", renderer, "assets/water.png");
     TileRegistry::registerType(4, "Lily pad", renderer, "assets/water_lily_pad.png");
+    TileRegistry::registerType(5, "Mountains", renderer, "assets/mountains.png");
 
     // Fill the map with texture tiles
     // Create a simple checkerboard pattern
