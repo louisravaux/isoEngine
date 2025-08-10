@@ -16,7 +16,6 @@ add_subdirectory(SDL_image EXCLUDE_FROM_ALL)
 # ImGui
 set(IMGUI_SOURCES
     ImGui/imgui.cpp
-    ImGui/imgui_demo.cpp
     ImGui/imgui_draw.cpp
     ImGui/imgui_tables.cpp
     ImGui/imgui_widgets.cpp
@@ -42,6 +41,8 @@ add_executable(isoEngine
     src/core/Engine.cpp
     src/core/Map.cpp
     src/core/Tile.cpp
+    src/core/TileRegistry.cpp
+    src/core/TileType.cpp
     src/utils/Math.cpp
     src/UI/UIManager.cpp
     src/UI/UIDebug.cpp
