@@ -70,31 +70,37 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
     }
 
     // Create a small test map
-    gameMap = std::make_unique<Map>(20, 20);
+    int layerNumber = 2;
+    gameMap = std::make_unique<Map>(8, 8, layerNumber);
 
+    TileRegistry::registerType(0, "Void", renderer, "");
     TileRegistry::registerType(1, "Grass", renderer, "assets/grass.png");
     TileRegistry::registerType(2, "Sand", renderer, "assets/sand.png");
     TileRegistry::registerType(3, "Water", renderer, "assets/water.png");
+    TileRegistry::registerType(4, "Lily pad", renderer, "assets/water_lily_pad.png");
 
     // Fill the map with texture tiles
     // Create a simple checkerboard pattern
-    for (int y = 0; y < 20; ++y) {
-        for (int x = 0; x < 20; ++x) {
-            if ((x + y) % 2 == 0) {
-                // Use grass texture for even positions
-                gameMap->setTile(x, y, 1);
-            } else {
-                // Use stone texture for odd positions
-                gameMap->setTile(x, y, 2);
+    for (int layer = 0; layer < 1; ++layer) {
+        for (int y = 0; y < 8; ++y) {
+            for (int x = 0; x < 8; ++x) {
+                if ((x + y) % 2 == 0) {
+                    // Use grass texture for even positions
+                    gameMap->setTile(x, y, layer, 1);
+                } else {
+                    // Use sand texture for odd positions
+                    gameMap->setTile(x, y, layer, 2);
+                }
             }
         }
     }
-    
+        
     // Add a special water tile in the center
-    gameMap->setTile(2, 2, 3);
+    // gameMap->setTile(2, 2, 1, 3);
+    // gameMap->setTile(2, 2, 2, 2);
 
     // Center the camera on the map
-    gameMap->setCamera(-WIN_WIDTH/2.0f, -16.0f);
+    gameMap->setCamera(-WIN_WIDTH/2.0f, -WIN_HEIGHT/4.0f);
 
     uiManager = std::make_unique<UIDebug>(this);
 
@@ -133,13 +139,7 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
 
         if (event->button.button == SDL_BUTTON_LEFT) {
             if (selectedTileX >= 0 && selectedTileY >= 0) {
-                // SDL_Log("Clicked tile at (%d, %d)", selectedTileX, selectedTileY);
-                // SDL_Log("Screen position: (%d, %d)", mouseX, mouseY);
-                // SDL_Log("Camera position: (%f, %f)", gameMap->getCameraX(), gameMap->getCameraY());
-                // SDL_Log("Tile screen position: (%d, %d)", gameMap->getTile(selectedTileX, selectedTileY)->getScreenX(), gameMap->getTile(selectedTileX, selectedTileY)->getScreenY());
-
-                // You could add tile interaction here, like changing tile type
-                gameMap->setTile(selectedTileX, selectedTileY, selectedTileType);
+                gameMap->setTile(selectedTileX, selectedTileY, selectedLayer, selectedTileType);
             }
         }
     }
@@ -189,7 +189,7 @@ SDL_AppResult IsoEngine::EngineIterate(void *appstate)
         // Render cursor on selected tile
         if (cursorTexture && selectedTileX >= 0 && selectedTileY >= 0) {
             // Get the actual tile at this position
-            Tile* selectedTile = gameMap->getTile(selectedTileX, selectedTileY);
+            Tile* selectedTile = gameMap->getTile(selectedTileX, selectedTileY, selectedLayer);
             if (selectedTile) {
                 // Use the exact same positioning as the tile itself
                 int tileScreenX = selectedTile->getScreenX();

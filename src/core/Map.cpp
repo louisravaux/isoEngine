@@ -8,14 +8,17 @@ constexpr int TILE_WIDTH = 64;
 constexpr int TILE_HEIGHT = 64;
 
 // Constructor - creates empty map
-Map::Map(int width, int height)
-    : mapWidth(width), mapHeight(height), cameraX(0.0f), cameraY(0.0f) {
+Map::Map(int width, int height, int numLayers)
+    : mapWidth(width), mapHeight(height), numLayers(numLayers), cameraX(0.0f), cameraY(0.0f) {
     
-    // Initialize 2D vector with empty tiles
-    tiles.resize(mapHeight);
-    for (int y = 0; y < mapHeight; ++y) {
-        tiles[y].resize(mapWidth);
-        // unique_ptr automatically initializes to nullptr
+    // Initialize 3D vector with empty tiles
+    tiles.resize(numLayers);
+    for (int z = 0; z < numLayers; ++z) {
+        tiles[z].resize(mapHeight);
+        for (int y = 0; y < mapHeight; ++y) {
+            tiles[z][y].resize(mapWidth);
+            // unique_ptr automatically initializes to nullptr
+        }
     }
 }
 
@@ -30,18 +33,18 @@ bool Map::isValidPosition(int x, int y) const {
 }
 
 // Tile management - set tile with existing unique_ptr
-void Map::setTile(int x, int y, std::unique_ptr<Tile> tile) {
+void Map::setTile(int x, int y, int layer, std::unique_ptr<Tile> tile) {
     if (!isValidPosition(x, y)) {
         std::cerr << "Invalid tile position: (" << x << ", " << y << ")" << std::endl;
         return;
     }
     
     // Move the unique_ptr
-    tiles[y][x] = std::move(tile);
+    tiles[layer][y][x] = std::move(tile);
 }
 
 // Tile management - create new tile from image
-void Map::setTile(int x, int y, int tileID) {
+void Map::setTile(int x, int y, int layer, int tileID) {
     if (!isValidPosition(x, y)) {
         std::cerr << "Invalid tile position: (" << x << ", " << y << ")" << std::endl;
         return;
@@ -49,46 +52,35 @@ void Map::setTile(int x, int y, int tileID) {
     
     // Create new tile and move it into position
     auto tile = std::make_unique<Tile>(tileID, x, y);
-    tiles[y][x] = std::move(tile);
+    tiles[layer][y][x] = std::move(tile);
 }
 
 // Remove tile at position
-void Map::removeTile(int x, int y) {
+void Map::removeTile(int x, int y, int layer) {
     if (!isValidPosition(x, y)) {
         return;
     }
     
     // Reset unique_ptr (automatically destroys the tile)
-    tiles[y][x].reset();
+    tiles[layer][y][x].reset();
 }
 
 // Get tile at position
-Tile* Map::getTile(int x, int y) const {
+Tile* Map::getTile(int x, int y, int layer) const {
     if (!isValidPosition(x, y)) {
         return nullptr;
     }
-    
-    return tiles[y][x].get(); // get() returns raw pointer from unique_ptr
+
+    return tiles[layer][y][x].get(); // get() returns raw pointer from unique_ptr
 }
 
 // Check if tile exists at position
-bool Map::hasTile(int x, int y) const {
+bool Map::hasTile(int x, int y, int layer) const {
     if (!isValidPosition(x, y)) {
         return false;
     }
-    
-    return tiles[y][x] != nullptr;
-}
 
-// Render all tiles
-void Map::render(SDL_Renderer* renderer) {
-    for (int y = 0; y < mapHeight; ++y) {
-        for (int x = 0; x < mapWidth; ++x) {
-            if (tiles[y][x]) {
-                tiles[y][x]->render(renderer);
-            }
-        }
-    }
+    return tiles[layer][y][x] != nullptr;
 }
 
 // Render with camera offset
@@ -101,31 +93,29 @@ void Map::renderWithCamera(SDL_Renderer* renderer, float camX, float camY) {
     cameraX = camX;
     cameraY = camY;
     
-    // Render tiles with offset
-    for (int y = 0; y < mapHeight; ++y) {
-        for (int x = 0; x < mapWidth; ++x) {
-            if (tiles[y][x]) {
-                // Get tile's screen position
-                int tileScreenX = tiles[y][x]->getScreenX();
-                int tileScreenY = tiles[y][x]->getScreenY();
-                
-                // Apply camera offset
-                SDL_FRect destRect = {
-                    static_cast<float>(tileScreenX - TILE_WIDTH * 0.5f) - cameraX, // Align to center
-                    static_cast<float>(tileScreenY) - cameraY,
-                    static_cast<float>(TILE_WIDTH),
-                    static_cast<float>(TILE_HEIGHT)
-                };
-                
-                // Render tile at offset position
-                SDL_RenderTexture(renderer, tiles[y][x]->getTexture(), nullptr, &destRect);
+    // Render tiles with layer as outermost loop for proper layering
+    for (int layer = 0; layer < numLayers; ++layer) {
+        for (int y = 0; y < mapHeight; ++y) {
+            for (int x = 0; x < mapWidth; ++x) {
+                if (tiles[layer][y][x]) {
+                    // Get tile's screen position
+                    int tileScreenX = tiles[layer][y][x]->getScreenX();
+                    int tileScreenY = tiles[layer][y][x]->getScreenY();
+
+                    // Apply camera offset
+                    SDL_FRect destRect = {
+                        static_cast<float>(tileScreenX - TILE_WIDTH * 0.5f) - cameraX, // Align to center
+                        static_cast<float>(tileScreenY) - cameraY - layer * TILE_HEIGHT * 0.5f, // Layer offset
+                        static_cast<float>(TILE_WIDTH),
+                        static_cast<float>(TILE_HEIGHT)
+                    };
+                    
+                    // Render tile at offset position
+                    SDL_RenderTexture(renderer, tiles[layer][y][x]->getTexture(), nullptr, &destRect);
+                }
             }
         }
     }
-    
-    // Restore camera position
-    cameraX = oldCamX;
-    cameraY = oldCamY;
 }
 
 // Camera control
@@ -156,20 +146,24 @@ int Map::getHeight() const {
     return mapHeight;
 }
 
+int Map::getLayerCount() const {
+    return numLayers;
+}
+
 // Clear all tiles
 void Map::clearMap() {
     for (int y = 0; y < mapHeight; ++y) {
         for (int x = 0; x < mapWidth; ++x) {
-            tiles[y][x].reset(); // Destroy tile and set to nullptr
+            tiles[numLayers - 1][y][x].reset(); // Destroy tile and set to nullptr
         }
     }
 }
 
 // Fill entire map with same tile type
-void Map::fillWithTile(int tileID) {
+void Map::fillWithTile(int tileID, int layer) {
     for (int y = 0; y < mapHeight; ++y) {
         for (int x = 0; x < mapWidth; ++x) {
-            setTile(x, y, tileID);
+            setTile(x, y, layer, tileID);
         }
     }
 }
@@ -186,7 +180,6 @@ void Map::gridToScreen(int gridX, int gridY, int& screenX, int& screenY) const {
 
 bool Map::getSelectedTile(int screenX, int screenY, float cameraX, float cameraY, int& gridX, int& gridY) const {
 
-     // Convert directly (no camera offset since camera is 0,0)
     screenToGrid(screenX + cameraX, screenY + cameraY, gridX, gridY);
 
     // Check if resulting grid coordinates are valid

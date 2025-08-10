@@ -23,25 +23,6 @@ Tile::~Tile() {
     }
 }
 
-// Render the tile
-void Tile::render(SDL_Renderer* renderer) {
-    auto type = TileRegistry::getType(tileID);
-    if (!type) {
-        return; // Nothing to render
-    }
-    
-    // Create destination rectangle for rendering
-    SDL_FRect destRect = {
-        static_cast<float>(screenX),
-        static_cast<float>(screenY),
-        static_cast<float>(TILE_WIDTH),
-        static_cast<float>(TILE_HEIGHT)
-    };
-    
-    // Render the texture
-    SDL_RenderTexture(renderer, getTexture(), nullptr, &destRect);
-}
-
 // Getters
 int Tile::getID() const {
     return tileID;

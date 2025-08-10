@@ -13,7 +13,7 @@ UIDebug::~UIDebug() {
 void UIDebug::content() {
     if (!engine) return;
 
-    ImGui::SetNextWindowSize(ImVec2(170, 220), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(250, 350), ImGuiCond_FirstUseEver);
     
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
 
@@ -23,7 +23,7 @@ void UIDebug::content() {
 
     // Tile info display
     if (engine->selectedTileX >= 0 && engine->selectedTileY >= 0) {
-        Tile* selectedTile = engine->gameMap->getTile(engine->selectedTileX, engine->selectedTileY);
+        Tile* selectedTile = engine->gameMap->getTile(engine->selectedTileX, engine->selectedTileY, engine->selectedLayer);
         if (selectedTile) {
             ImGui::Text("Tile ID: %d", selectedTile->getID());
             ImGui::Text("Grid Pos: (%d, %d)", selectedTile->getGridX(), selectedTile->getGridY());
@@ -35,28 +35,38 @@ void UIDebug::content() {
         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "No tile selected");
     }
 
-  if (ImGui::CollapsingHeader("Tile Types", ImGuiTreeNodeFlags_DefaultOpen)) {
-    static int selectedID = -1; // Keeps track of currently selected tile type
-
-    for (const auto& tile : TileRegistry::getAllTypes()) {
-        int id = TileRegistry::getTileID(tile);
-        std::string label = tile->getName() + "##" + std::to_string(id);
-        // "##" avoids ImGui ID conflicts when names repeat
-
-        // Highlight the selected one
-        if (ImGui::Selectable(label.c_str(), selectedID == id)) {
-            selectedID = id;
-            engine->selectedTileType = id;
-        }
-
-        SDL_Texture* tex = tile->getTexture();
-        if (tex) {
-            ImVec2 size(16, 16); // preview size
-            ImGui::SameLine();
-            ImGui::Image((ImTextureID)tex, size);
+    if(ImGui::CollapsingHeader("Map Info", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Text("Map Size: %dx%d", engine->gameMap->getWidth(), engine->gameMap->getHeight());
+        ImGui::Text("Layers: %d", engine->gameMap->getLayerCount());
+        ImGui::Text("Current Layer: %d", engine->selectedLayer);
+        //change layer button
+        if (ImGui::Button("Change Layer")) {
+            engine->selectedLayer = (engine->selectedLayer + 1) % engine->gameMap->getLayerCount();
         }
     }
-}
+
+    if (ImGui::CollapsingHeader("Tile Types", ImGuiTreeNodeFlags_DefaultOpen)) {
+        static int selectedID = -1; // Keeps track of currently selected tile type
+
+        for (const auto& tile : TileRegistry::getAllTypes()) {
+            int id = TileRegistry::getTileID(tile);
+            std::string label = tile->getName() + "##" + std::to_string(id);
+            // "##" avoids ImGui ID conflicts when names repeat
+
+            // Highlight the selected one
+            if (ImGui::Selectable(label.c_str(), selectedID == id)) {
+                selectedID = id;
+                engine->selectedTileType = id;
+            }
+
+            SDL_Texture* tex = tile->getTexture();
+            if (tex) {
+                ImVec2 size(16, 16); // preview size
+                ImGui::SameLine();
+                ImGui::Image((ImTextureID)tex, size);
+            }
+        }
+    }
 
 
     // Camera controls

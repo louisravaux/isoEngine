@@ -4,7 +4,6 @@
 
 #include <string>
 
-#include "SDL3/SDL_render.h"
 #include <SDL3_image/SDL_image.h>
 #include "TileRegistry.hpp"
 
@@ -21,9 +20,6 @@ public:
 
     // Destructor to clean up the texture
     ~Tile();
-
-    // Render the tile at its position
-    void render(SDL_Renderer* renderer);
 
     // Update screen position based on grid position
     void updateScreenPosition();

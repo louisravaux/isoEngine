@@ -34,6 +34,7 @@ public:
     int selectedTileY = -1;
     int mouseX = 0, mouseY = 0;
     int selectedTileType = 1;
+    int selectedLayer = 0;
 
     // Game objects
     std::unique_ptr<Map> gameMap;
