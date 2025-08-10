@@ -8,54 +8,25 @@ constexpr int TILE_WIDTH = 64;   // Width of isometric tile sprite
 constexpr int TILE_HEIGHT = 64;  // Height of isometric tile sprite
 
 // Constructor - loads texture from file
-Tile::Tile(SDL_Renderer* renderer, const char* imagePath, int id, int posX, int posY)
+Tile::Tile(int id, int posX, int posY)
     : tileID(id), gridX(posX), gridY(posY) {
-    
-    // Load image as surface first
-    SDL_Surface* surface = IMG_Load(imagePath);
-    if (!surface) {
-        std::cerr << "Failed to load tile image " << imagePath << ": " << SDL_GetError() << std::endl;
-        sprite = nullptr;
-        return;
-    }
-    
-    // Convert surface to texture
-    sprite = SDL_CreateTextureFromSurface(renderer, surface);
-    if (!sprite) {
-        std::cerr << "Failed to create texture from " << imagePath << ": " << SDL_GetError() << std::endl;
-    } else {
-        SDL_SetTextureScaleMode(sprite, SDL_SCALEMODE_NEAREST);
-    }
-    
-    // Clean up surface (no longer needed)
-    SDL_DestroySurface(surface);
-    
-    // Calculate screen position from grid position
-    updateScreenPosition();
-}
 
-// Constructor - uses existing texture
-Tile::Tile(SDL_Texture* texture, int id, int posX, int posY)
-    : sprite(texture), tileID(id), gridX(posX), gridY(posY) {
-
-    screenX = 0;
-    screenY = 0;
-    
     // Calculate screen position from grid position
     updateScreenPosition();
 }
 
 // Destructor
 Tile::~Tile() {
-    if (sprite) {
-        SDL_DestroyTexture(sprite);
-        sprite = nullptr;
+    auto type = TileRegistry::getType(tileID);
+    if (type) {
+        // Texture will be freed if handled in TileType destructor
     }
 }
 
 // Render the tile
 void Tile::render(SDL_Renderer* renderer) {
-    if (!sprite) {
+    auto type = TileRegistry::getType(tileID);
+    if (!type) {
         return; // Nothing to render
     }
     
@@ -68,7 +39,7 @@ void Tile::render(SDL_Renderer* renderer) {
     };
     
     // Render the texture
-    SDL_RenderTexture(renderer, sprite, nullptr, &destRect);
+    SDL_RenderTexture(renderer, getTexture(), nullptr, &destRect);
 }
 
 // Getters
@@ -93,7 +64,9 @@ int Tile::getScreenY() const {
 }
 
 SDL_Texture* Tile::getTexture() const {
-    return sprite;
+    auto type = TileRegistry::getType(tileID);
+    if (!type) return nullptr;
+    return type->getTexture();
 }
 
 // Setters

@@ -2,23 +2,22 @@
 
 #pragma once
 
+#include <string>
+
 #include "SDL3/SDL_render.h"
 #include <SDL3_image/SDL_image.h>
+#include "TileRegistry.hpp"
 
 class Tile {
 
 private: 
-    SDL_Texture* sprite; // Texture for the tile
     int tileID; // ID of the tile type
     int gridX, gridY;    // Position in tile grid (0,0), (1,0), etc.
     int screenX, screenY; // Actual screen position in pixels
 
 public:
     // Constructor to initialize the tile with a texture, ID, and position
-    Tile(SDL_Renderer* renderer, const char* imagePath, int id, int posX, int posY);
-
-    // Constructor to initialize the tile with an existing texture
-    Tile(SDL_Texture* texture, int id, int posX, int posY);
+    Tile(int id, int posX, int posY);
 
     // Destructor to clean up the texture
     ~Tile();

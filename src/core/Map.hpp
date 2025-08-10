@@ -26,7 +26,7 @@ public:
     
     // Tile management
     void setTile(int x, int y, std::unique_ptr<Tile> tile);
-    void setTile(int x, int y, SDL_Renderer* renderer, const char* imagePath, int tileID);
+    void setTile(int x, int y, int tileID);
     void removeTile(int x, int y);
     
     // Tile access
@@ -50,7 +50,7 @@ public:
     
     // Utility methods
     void clearMap();
-    void fillWithTile(SDL_Renderer* renderer, const char* imagePath, int tileID);
+    void fillWithTile(int tileID);
     
     // Coordinate conversion helpers
     void screenToGrid(int screenX, int screenY, int& gridX, int& gridY) const;

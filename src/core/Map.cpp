@@ -41,14 +41,14 @@ void Map::setTile(int x, int y, std::unique_ptr<Tile> tile) {
 }
 
 // Tile management - create new tile from image
-void Map::setTile(int x, int y, SDL_Renderer* renderer, const char* imagePath, int tileID) {
+void Map::setTile(int x, int y, int tileID) {
     if (!isValidPosition(x, y)) {
         std::cerr << "Invalid tile position: (" << x << ", " << y << ")" << std::endl;
         return;
     }
     
     // Create new tile and move it into position
-    auto tile = std::make_unique<Tile>(renderer, imagePath, tileID, x, y);
+    auto tile = std::make_unique<Tile>(tileID, x, y);
     tiles[y][x] = std::move(tile);
 }
 
@@ -166,10 +166,10 @@ void Map::clearMap() {
 }
 
 // Fill entire map with same tile type
-void Map::fillWithTile(SDL_Renderer* renderer, const char* imagePath, int tileID) {
+void Map::fillWithTile(int tileID) {
     for (int y = 0; y < mapHeight; ++y) {
         for (int x = 0; x < mapWidth; ++x) {
-            setTile(x, y, renderer, imagePath, tileID);
+            setTile(x, y, tileID);
         }
     }
 }
