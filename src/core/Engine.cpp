@@ -4,6 +4,7 @@
 #include "SDL3/SDL_mouse.h"
 
 #include "ui/UIManager.hpp"
+#include "core/TileRegistry.hpp"
 
 IsoEngine::IsoEngine() {
 
@@ -41,7 +42,7 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
     SDL_SetWindowResizable(window, true);
 
     // Load mouse cursor texture
-    SDL_Surface* mouseCursorSurface = IMG_Load("assets/mouse-cursor.png");
+    SDL_Surface* mouseCursorSurface = IMG_Load("assets/pencil.png");
     if (mouseCursorSurface) {
         mouseCursorTexture = SDL_CreateTextureFromSurface(renderer, mouseCursorSurface);
         SDL_DestroySurface(mouseCursorSurface);
@@ -71,28 +72,32 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
     // Create a small test map
     gameMap = std::make_unique<Map>(20, 20);
 
+    TileRegistry::registerType(1, "Grass", renderer, "assets/grass.png");
+    TileRegistry::registerType(2, "Sand", renderer, "assets/sand.png");
+    TileRegistry::registerType(3, "Water", renderer, "assets/water.png");
+
     // Fill the map with texture tiles
     // Create a simple checkerboard pattern
     for (int y = 0; y < 20; ++y) {
         for (int x = 0; x < 20; ++x) {
             if ((x + y) % 2 == 0) {
                 // Use grass texture for even positions
-                gameMap->setTile(x, y, renderer, "assets/dirt.png", 1);
+                gameMap->setTile(x, y, 1);
             } else {
                 // Use stone texture for odd positions
-                gameMap->setTile(x, y, renderer, "assets/sand.png", 2);
+                gameMap->setTile(x, y, 2);
             }
         }
     }
     
     // Add a special water tile in the center
-    gameMap->setTile(2, 2, renderer, "assets/water.png", 3);
+    gameMap->setTile(2, 2, 3);
 
     // Center the camera on the map
     gameMap->setCamera(-WIN_WIDTH/2.0f, -16.0f);
 
-    uiManager = std::make_unique<UIDebug>();
-    
+    uiManager = std::make_unique<UIDebug>(this);
+
     // Initialize UI Manager
     uiManager->init(window, renderer);
 
@@ -128,13 +133,13 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
 
         if (event->button.button == SDL_BUTTON_LEFT) {
             if (selectedTileX >= 0 && selectedTileY >= 0) {
-                SDL_Log("Clicked tile at (%d, %d)", selectedTileX, selectedTileY);
-                SDL_Log("Screen position: (%d, %d)", mouseX, mouseY);
-                SDL_Log("Camera position: (%f, %f)", gameMap->getCameraX(), gameMap->getCameraY());
-                SDL_Log("Tile screen position: (%d, %d)", gameMap->getTile(selectedTileX, selectedTileY)->getScreenX(), gameMap->getTile(selectedTileX, selectedTileY)->getScreenY());
+                // SDL_Log("Clicked tile at (%d, %d)", selectedTileX, selectedTileY);
+                // SDL_Log("Screen position: (%d, %d)", mouseX, mouseY);
+                // SDL_Log("Camera position: (%f, %f)", gameMap->getCameraX(), gameMap->getCameraY());
+                // SDL_Log("Tile screen position: (%d, %d)", gameMap->getTile(selectedTileX, selectedTileY)->getScreenX(), gameMap->getTile(selectedTileX, selectedTileY)->getScreenY());
 
                 // You could add tile interaction here, like changing tile type
-                //gameMap->setTile(selectedTileX, selectedTileY, renderer, "assets/sand.png", 4);
+                gameMap->setTile(selectedTileX, selectedTileY, selectedTileType);
             }
         }
     }
@@ -157,7 +162,14 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
                 break;
         }
     }
-    
+
+    if(event->type == SDL_EVENT_WINDOW_RESIZED) {
+        // move camera to center
+        int windowWidth, windowHeight;
+        SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+        gameMap->setCamera(static_cast<float>(-windowWidth) / 2.0f, static_cast<float>(-windowHeight) / 4.0f);
+    }
+
     return SDL_APP_CONTINUE;
 }
 
@@ -166,8 +178,8 @@ SDL_AppResult IsoEngine::EngineIterate(void *appstate)
 
     uiManager->update();
 
-    // Clear screen to black
-    SDL_SetRenderDrawColor(renderer, 255, 255, 200, 255);
+    // Clear screen to sky blue
+    SDL_SetRenderDrawColor(renderer, 135, 206, 235, 255);
     SDL_RenderClear(renderer);
 
     // Render the map
@@ -203,8 +215,8 @@ SDL_AppResult IsoEngine::EngineIterate(void *appstate)
 
     // draw mouse cursor
     SDL_FRect mouseCursorRect = {
-        static_cast<float>(mouseX) - 16.0f,
-        static_cast<float>(mouseY) - 16.0f,
+        static_cast<float>(mouseX),
+        static_cast<float>(mouseY) - 32.0f,
         32.0f, // Width of the cursor
         32.0f  // Height of the cursor
     };

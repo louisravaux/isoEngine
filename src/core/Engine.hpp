@@ -18,7 +18,7 @@ private:
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
 
-    std::unique_ptr<UIManager> uiManager = std::make_unique<UIDebug>();
+    std::unique_ptr<UIManager> uiManager = nullptr;
 
 public:
     IsoEngine();
@@ -33,6 +33,7 @@ public:
     int selectedTileX = -1;  // -1 means no tile selected
     int selectedTileY = -1;
     int mouseX = 0, mouseY = 0;
+    int selectedTileType = 1;
 
     // Game objects
     std::unique_ptr<Map> gameMap;
@@ -41,4 +42,5 @@ public:
     SDL_AppResult EngineEvent(void *appstate, SDL_Event *event);
     SDL_AppResult EngineIterate(void *appstate);
     void EngineQuit(void *appstate, SDL_AppResult result);
+    
 };
