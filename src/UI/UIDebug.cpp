@@ -23,6 +23,7 @@ void UIDebug::content() {
     ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
     ImGui::Text("Frame Time: %.3f ms", ImGui::GetIO().DeltaTime * 1000.0f);
 
+    ImGui::Separator();
     
     ImGui::Text("Mouse: (%d, %d)", engine->mouseX, engine->mouseY);
 
