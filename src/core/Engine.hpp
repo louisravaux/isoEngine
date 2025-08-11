@@ -37,7 +37,9 @@ public:
     int selectedLayer = 0;
 
     // Game objects
-    std::unique_ptr<Map> gameMap;
+    int activeMapIndex = 0;
+    std::vector<std::unique_ptr<Map>> gameMaps;
+    //std::unique_ptr<Map> gameMap;
 
     SDL_AppResult EngineInit(void **appstate, int argc, char *argv[]);
     SDL_AppResult EngineEvent(void *appstate, SDL_Event *event);

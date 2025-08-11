@@ -23,7 +23,7 @@ void UIDebug::content() {
 
     // Tile info display
     if (engine->selectedTileX >= 0 && engine->selectedTileY >= 0) {
-        Tile* selectedTile = engine->gameMap->getTile(engine->selectedTileX, engine->selectedTileY, engine->selectedLayer);
+        Tile* selectedTile = engine->gameMaps[engine->activeMapIndex]->getTile(engine->selectedTileX, engine->selectedTileY, engine->selectedLayer);
         if (selectedTile) {
             ImGui::Text("Tile ID: %d", selectedTile->getID());
             ImGui::Text("Grid Pos: (%d, %d)", selectedTile->getGridX(), selectedTile->getGridY());
@@ -36,12 +36,17 @@ void UIDebug::content() {
     }
 
     if(ImGui::CollapsingHeader("Map Info", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Text("Map Size: %dx%d", engine->gameMap->getWidth(), engine->gameMap->getHeight());
-        ImGui::Text("Layers: %d", engine->gameMap->getLayerCount());
+        ImGui::Text("Active Map: %d", engine->activeMapIndex);
+        // change map
+        if (ImGui::Button("Next Map")) {
+            engine->activeMapIndex = (engine->activeMapIndex + 1) % engine->gameMaps.size();
+        }
+        ImGui::Text("Map Size: %dx%d", engine->gameMaps[engine->activeMapIndex]->getWidth(), engine->gameMaps[engine->activeMapIndex]->getHeight());
+        ImGui::Text("Layers: %d", engine->gameMaps[engine->activeMapIndex]->getLayerCount());
         ImGui::Text("Current Layer: %d", engine->selectedLayer);
         //change layer button
         if (ImGui::Button("Change Layer")) {
-            engine->selectedLayer = (engine->selectedLayer + 1) % engine->gameMap->getLayerCount();
+            engine->selectedLayer = (engine->selectedLayer + 1) % engine->gameMaps[engine->activeMapIndex]->getLayerCount();
         }
     }
 
@@ -71,18 +76,18 @@ void UIDebug::content() {
 
     // Camera controls
     if (ImGui::CollapsingHeader("Camera")) {
-        float camX = engine->gameMap->getCameraX();
-        float camY = engine->gameMap->getCameraY();
-        
+        float camX = engine->gameMaps[engine->activeMapIndex]->getCameraX();
+        float camY = engine->gameMaps[engine->activeMapIndex]->getCameraY();
+
         if (ImGui::SliderFloat("Camera X", &camX, -1000.0f, 1000.0f)) {
-            engine->gameMap->setCamera(camX, camY);
+            engine->gameMaps[engine->activeMapIndex]->setCamera(camX, camY);
         }
         if (ImGui::SliderFloat("Camera Y", &camY, -1000.0f, 1000.0f)) {
-            engine->gameMap->setCamera(camX, camY);
+            engine->gameMaps[engine->activeMapIndex]->setCamera(camX, camY);
         }
         
         if (ImGui::Button("Reset Camera")) {
-            engine->gameMap->setCamera(-640.0f, -16.0f);
+            engine->gameMaps[engine->activeMapIndex]->setCamera(-640.0f, -16.0f);
         }
     }
     
