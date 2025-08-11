@@ -1,4 +1,4 @@
-#include "UIDebug.hpp"
+#include "UI/UIDebug.hpp"
 #include "core/Engine.hpp"
 
 #include "imgui.h"
@@ -18,6 +18,11 @@ void UIDebug::content() {
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
 
     ImGui::Begin("Debug Info");
+
+    // FPS info display
+    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::Text("Frame Time: %.3f ms", ImGui::GetIO().DeltaTime * 1000.0f);
+
     
     ImGui::Text("Mouse: (%d, %d)", engine->mouseX, engine->mouseY);
 

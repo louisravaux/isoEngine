@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/UIManager.hpp"
+#include "UI/UIManager.hpp"
 
 class IsoEngine;
 
