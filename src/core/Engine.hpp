@@ -7,7 +7,7 @@
 #include <SDL3/SDL.h>
 #include <memory>
 
-#include "ui/UIDebug.hpp"
+#include "UI/UIDebug.hpp"
 
 class IsoEngine {
 

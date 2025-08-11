@@ -3,7 +3,7 @@
 #include "SDL3/SDL_log.h"
 #include "SDL3/SDL_mouse.h"
 
-#include "ui/UIManager.hpp"
+#include "UI/UIManager.hpp"
 #include "core/TileRegistry.hpp"
 
 IsoEngine::IsoEngine() {
@@ -28,10 +28,11 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-
-    // Set vsync
-    if (SDL_SetRenderVSync(renderer, SDL_RENDERER_VSYNC_ADAPTIVE)) {
-        SDL_Log("Couldn't enable VSync: %s", SDL_GetError());
+    
+    //Enable VSync
+    if( SDL_SetRenderVSync( renderer, 1 ) == false )
+    {
+        SDL_Log( "Could not enable VSync! SDL error: %s\n", SDL_GetError() );
         return SDL_APP_FAILURE;
     }
 
@@ -186,7 +187,11 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
         // move camera to center
         int windowWidth, windowHeight;
         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-        gameMaps[activeMapIndex]->setCamera(static_cast<float>(-windowWidth) / 2.0f, static_cast<float>(-windowHeight) / 4.0f);
+
+        // center the camera on all maps
+        for (auto& map : gameMaps) {
+            map->setCamera(static_cast<float>(-windowWidth) / 2.0f, static_cast<float>(-windowHeight) / 4.0f);
+        }
     }
 
     return SDL_APP_CONTINUE;
