@@ -81,8 +81,9 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
     TileRegistry::registerType(1, "Grass", renderer, "assets/grass.png");
     TileRegistry::registerType(2, "Sand", renderer, "assets/sand.png");
     TileRegistry::registerType(3, "Water", renderer, "assets/water.png");
-    TileRegistry::registerType(4, "Lily pad", renderer, "assets/water_lily_pad.png");
-    TileRegistry::registerType(5, "Mountains", renderer, "assets/mountains.png");
+    TileRegistry::registerType(4, "Stone", renderer, "assets/stone.png");
+    TileRegistry::registerType(5, "Lily pad", renderer, "assets/water_lily_pad.png");
+    TileRegistry::registerType(6, "Mountains", renderer, "assets/mountains.png");
 
     // Fill the map with texture tiles
     // Create a simple checkerboard pattern
