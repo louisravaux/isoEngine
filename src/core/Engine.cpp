@@ -185,7 +185,6 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
 
     if(event->type == SDL_EVENT_WINDOW_RESIZED) {
         // move camera to center
-        int windowWidth, windowHeight;
         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
 
         // center the camera on all maps
@@ -280,4 +279,10 @@ void IsoEngine::EngineQuit(void *appstate, SDL_AppResult result)
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+}
+
+// getters
+
+SDL_Window* IsoEngine::getWindow() const {
+    return window;
 }

@@ -15,6 +15,9 @@ private:
     const int WIN_WIDTH = 1280;
     const int WIN_HEIGHT = 720;
 
+    int windowWidth;
+    int windowHeight;
+
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
 
@@ -28,7 +31,6 @@ public:
     SDL_Texture* cursorTexture = nullptr;
     SDL_Texture* mouseCursorTexture = nullptr;
 
-
     // selection
     int selectedTileX = -1;  // -1 means no tile selected
     int selectedTileY = -1;
@@ -40,6 +42,8 @@ public:
     int activeMapIndex = 0;
     std::vector<std::unique_ptr<Map>> gameMaps;
     //std::unique_ptr<Map> gameMap;
+
+    SDL_Window* getWindow() const;
 
     SDL_AppResult EngineInit(void **appstate, int argc, char *argv[]);
     SDL_AppResult EngineEvent(void *appstate, SDL_Event *event);
