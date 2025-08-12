@@ -23,8 +23,20 @@ void UIDebug::content() {
     ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
     ImGui::Text("Frame Time: %.3f ms", ImGui::GetIO().DeltaTime * 1000.0f);
 
+    // Frame Time Profiler
+    static float frameTimeHistory[100] = {};
+    static int frameTimeIndex = 0;
+    frameTimeHistory[frameTimeIndex] = ImGui::GetIO().DeltaTime * 1000.0f;
+    frameTimeIndex = (frameTimeIndex + 1) % IM_ARRAYSIZE(frameTimeHistory);
+    ImGui::PlotLines("Frame Time", frameTimeHistory, IM_ARRAYSIZE(frameTimeHistory), frameTimeIndex, nullptr, 0.0f, 100.0f, ImVec2(0, 60));
+
     ImGui::Separator();
-    
+
+    // Window size
+    int windowWidth, windowHeight;
+    SDL_GetWindowSize(engine->getWindow(), &windowWidth, &windowHeight);
+    ImGui::Text("Window Size: %dx%d", windowWidth, windowHeight);
+
     ImGui::Text("Mouse: (%d, %d)", engine->mouseX, engine->mouseY);
 
     // Tile info display
