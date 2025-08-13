@@ -7,7 +7,7 @@
 #include "core/TileRegistry.hpp"
 
 IsoEngine::IsoEngine() {
-
+    
 }
 
 IsoEngine::~IsoEngine() {
@@ -159,9 +159,13 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
     if (event->type == SDL_EVENT_QUIT) {
         return SDL_APP_SUCCESS;
     }
-    
+
+    // Handle UI events
+    uiManager->event(event);
+    ImGuiIO& io = uiManager->getIO();
+
     // Handle mouse movement for tile selection
-    if (event->type == SDL_EVENT_MOUSE_MOTION) {
+    if (event->type == SDL_EVENT_MOUSE_MOTION && !io.WantCaptureMouse) {
         mouseX = static_cast<int>(event->motion.x);
         mouseY = static_cast<int>(event->motion.y);
         
@@ -175,21 +179,21 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
         }
     }
 
-    // Handle UI events
-    uiManager->event(event);
-
     // Handle mouse clicks
-    if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+    if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN && !io.WantCaptureMouse) {
 
         if (event->button.button == SDL_BUTTON_LEFT) {
             if (selectedTileX >= 0 && selectedTileY >= 0) {
                 gameMaps[activeMapIndex]->setTile(selectedTileX, selectedTileY, selectedLayer, selectedTileType);
             }
         }
+        if (event->button.button == SDL_BUTTON_MIDDLE) {
+            uiManager->toggleVisibility();
+        }
     }
     
     // Simple camera controls with arrow keys
-    if (event->type == SDL_EVENT_KEY_DOWN) {
+    if (event->type == SDL_EVENT_KEY_DOWN && !io.WantCaptureKeyboard) {
         const float cameraSpeed = 32.0f;
         switch (event->key.key) {
             case SDLK_LEFT:
@@ -208,7 +212,7 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
     }
 
     // Reset camera zoom
-    if (event->type == SDL_EVENT_MOUSE_WHEEL) {
+    if (event->type == SDL_EVENT_MOUSE_WHEEL && !io.WantCaptureMouse) {
         if (event->wheel.y > 0) {
             gameMaps[activeMapIndex]->zoomCamera(1.05f);
         } else if (event->wheel.y < 0) {

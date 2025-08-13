@@ -1,10 +1,13 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <imgui.h>
 
 class  UIManager {
-
     private:
+        // private stuff
+
+    protected:
         bool isHidden = false;
 
     public:
@@ -17,4 +20,11 @@ class  UIManager {
         void update();
         void render(SDL_Renderer *renderer);
         void shutdown();
+
+        //getters
+        ImGuiIO& getIO();
+        bool getIsHidden();
+
+        //setters
+        void toggleVisibility();
 };

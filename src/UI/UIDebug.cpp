@@ -12,12 +12,13 @@ UIDebug::~UIDebug() {
 
 void UIDebug::content() {
     if (!engine) return;
+    if (isHidden) return;
 
-    ImGui::SetNextWindowSize(ImVec2(250, 350), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(300, 700), ImGuiCond_FirstUseEver);
     
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
 
-    ImGui::Begin("Debug Info");
+    ImGui::Begin("Debug Info", &isHidden);
 
     // FPS info display
     ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
@@ -96,7 +97,7 @@ void UIDebug::content() {
 
 
     // Camera controls
-    if (ImGui::CollapsingHeader("Camera")) {
+    if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
         float camX = engine->gameMaps[engine->activeMapIndex]->getCameraX();
         float camY = engine->gameMaps[engine->activeMapIndex]->getCameraY();
 

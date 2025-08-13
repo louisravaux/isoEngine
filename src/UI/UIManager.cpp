@@ -4,7 +4,10 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 UIManager::UIManager() {
-    // Constructor implementation
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    
 }
 
 UIManager::~UIManager() {
@@ -12,12 +15,9 @@ UIManager::~UIManager() {
 }
 
 void UIManager::init(SDL_Window *window, SDL_Renderer *renderer) {
-    
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
 
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 
     // disable imgui ini
@@ -77,4 +77,20 @@ void UIManager::shutdown() {
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
+}
+
+// getters
+
+ImGuiIO& UIManager::getIO() {
+    return ImGui::GetIO();
+}
+
+bool UIManager::getIsHidden() {
+    return isHidden;
+}
+
+// setters
+
+void UIManager::toggleVisibility() {
+    isHidden = !isHidden;
 }
