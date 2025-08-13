@@ -2,15 +2,16 @@
 #include "Map.hpp"
 #include "utils/Math.hpp"
 #include <iostream>
-
-// Tile constants (should match Tile.cpp)
-constexpr int TILE_WIDTH = 64;
-constexpr int TILE_HEIGHT = 64;
+#include <algorithm>
 
 // Constructor - creates empty map
-Map::Map(int width, int height, int numLayers)
-    : mapWidth(width), mapHeight(height), numLayers(numLayers), cameraX(0.0f), cameraY(0.0f) {
-    
+Map::Map(int width, int height, int numLayers, SDL_Color bgColor)
+    : mapWidth(width), mapHeight(height), numLayers(numLayers), cameraX(0.0f), cameraY(0.0f), backgroundColor(bgColor) {
+
+    // Set default tile size
+    tileWidth = 64;
+    tileHeight = 64;
+
     // Initialize 3D vector with empty tiles
     tiles.resize(numLayers);
     for (int z = 0; z < numLayers; ++z) {
@@ -51,7 +52,7 @@ void Map::setTile(int x, int y, int layer, int tileID) {
     }
     
     // Create new tile and move it into position
-    auto tile = std::make_unique<Tile>(tileID, x, y);
+    auto tile = std::make_unique<Tile>(tileID, x, y, tileWidth, tileHeight);
     tiles[layer][y][x] = std::move(tile);
 }
 
@@ -93,21 +94,29 @@ void Map::renderWithCamera(SDL_Renderer* renderer, float camX, float camY) {
     cameraX = camX;
     cameraY = camY;
     
+    // Calculate zoomed tile dimensions for rendering only
+    float zoomedTileWidth = tileWidth * cameraZoom;
+    float zoomedTileHeight = tileHeight * cameraZoom;
+    
     // Render tiles with layer as outermost loop for proper layering
     for (int layer = 0; layer < numLayers; ++layer) {
         for (int y = 0; y < mapHeight; ++y) {
             for (int x = 0; x < mapWidth; ++x) {
                 if (tiles[layer][y][x]) {
-                    // Get tile's screen position
+                    // Get tile's base screen position
                     int tileScreenX = tiles[layer][y][x]->getScreenX();
                     int tileScreenY = tiles[layer][y][x]->getScreenY();
+                    
+                    // Apply zoom to the position
+                    float zoomedX = tileScreenX * cameraZoom;
+                    float zoomedY = tileScreenY * cameraZoom;
 
                     // Apply camera offset
                     SDL_FRect destRect = {
-                        static_cast<float>(tileScreenX - TILE_WIDTH * 0.5f) - cameraX, // Align to center
-                        static_cast<float>(tileScreenY) - cameraY - layer * TILE_HEIGHT * 0.5f, // Layer offset
-                        static_cast<float>(TILE_WIDTH),
-                        static_cast<float>(TILE_HEIGHT)
+                        zoomedX - zoomedTileWidth * 0.5f - cameraX,
+                        zoomedY - cameraY - layer * zoomedTileHeight * 0.5f,
+                        zoomedTileWidth,
+                        zoomedTileHeight
                     };
                     
                     // Render tile at offset position
@@ -127,6 +136,16 @@ void Map::setCamera(float x, float y) {
 void Map::moveCamera(float deltaX, float deltaY) {
     cameraX += deltaX;
     cameraY += deltaY;
+}
+
+void Map::zoomCamera(float zoomFactor) {
+    cameraZoom *= zoomFactor;
+    // Ensure zoom factor is within reasonable limits
+    cameraZoom = std::clamp(cameraZoom, 0.5f, 4.0f);
+}
+
+float Map::getCameraZoom() const {
+    return cameraZoom;
 }
 
 float Map::getCameraX() const {
@@ -170,17 +189,20 @@ void Map::fillWithTile(int tileID, int layer) {
 
 // Convert screen coordinates to grid coordinates
 void Map::screenToGrid(int screenX, int screenY, int& gridX, int& gridY) const {
-    Math::toGridCoordinates(TILE_WIDTH, TILE_HEIGHT, screenX, screenY, gridX, gridY);
+    Math::toGridCoordinates(tileWidth, tileHeight, screenX, screenY, gridX, gridY);
 }
 
 // Convert grid coordinates to screen coordinates
 void Map::gridToScreen(int gridX, int gridY, int& screenX, int& screenY) const {
-    Math::toScreenCoordinates(TILE_WIDTH, TILE_HEIGHT, gridX, gridY, screenX, screenY);
+    Math::toScreenCoordinates(tileWidth, tileHeight, gridX, gridY, screenX, screenY);
 }
 
-bool Map::getSelectedTile(int screenX, int screenY, float cameraX, float cameraY, int& gridX, int& gridY) const {
+bool Map::getSelectedTile(int screenX, int screenY, int& gridX, int& gridY) const {
 
-    screenToGrid(screenX + cameraX, screenY + cameraY, gridX, gridY);
+    float adjustedX = (screenX + getCameraX()) / cameraZoom;
+    float adjustedY = (screenY + getCameraY()) / cameraZoom;
+    
+    screenToGrid(adjustedX, adjustedY, gridX, gridY);
 
     // Check if resulting grid coordinates are valid
     if (gridX < 0 || gridY < 0 || gridX >= mapWidth || gridY >= mapHeight) {
@@ -188,4 +210,12 @@ bool Map::getSelectedTile(int screenX, int screenY, float cameraX, float cameraY
     }
     
     return true;
+}
+
+SDL_Color Map::getBackgroundColor() const {
+    return backgroundColor;
+}
+
+void Map::setBackgroundColor(const SDL_Color& color) {
+    backgroundColor = color;
 }

@@ -3,13 +3,10 @@
 #include <iostream>
 #include "utils/Math.hpp"
 
-// Isometric tile constants
-constexpr int TILE_WIDTH = 64;   // Width of isometric tile sprite
-constexpr int TILE_HEIGHT = 64;  // Height of isometric tile sprite
 
 // Constructor - loads texture from file
-Tile::Tile(int id, int posX, int posY)
-    : tileID(id), gridX(posX), gridY(posY) {
+Tile::Tile(int id, int posX, int posY, int width, int height)
+    : tileID(id), gridX(posX), gridY(posY), width(width), height(height) {
 
     // Calculate screen position from grid position
     updateScreenPosition();
@@ -26,6 +23,14 @@ Tile::~Tile() {
 // Getters
 int Tile::getID() const {
     return tileID;
+}
+
+int Tile::getWidth() const {
+    return width;
+}
+
+int Tile::getHeight() const {
+    return height;
 }
 
 int Tile::getGridX() const {
@@ -62,5 +67,5 @@ void Tile::setID(int id) {
 }
 
 void Tile::updateScreenPosition() {
-    Math::toScreenCoordinates(TILE_WIDTH, TILE_HEIGHT, gridX, gridY, screenX, screenY);
+    Math::toScreenCoordinates(width, height, gridX, gridY, screenX, screenY);
 }

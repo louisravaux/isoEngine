@@ -28,7 +28,16 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    
+
+    // set window icon
+    SDL_Surface* iconSurface = IMG_Load("assets/stone.png");
+    if (iconSurface) {
+        SDL_SetWindowIcon(window, iconSurface);
+        SDL_DestroySurface(iconSurface);
+    } else {
+        SDL_Log("Failed to load icon.png: %s", SDL_GetError());
+    }
+
     //Enable VSync
     if( SDL_SetRenderVSync( renderer, 1 ) == false )
     {
@@ -74,16 +83,19 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
 
     // Create a small test map
     int layerNumber = 2;
-    gameMaps.push_back(std::make_unique<Map>(8, 8, layerNumber));
-    gameMaps.push_back(std::make_unique<Map>(12, 12, layerNumber));
+    gameMaps.push_back(std::make_unique<Map>(8, 8, layerNumber, SDL_Color{ 135, 206, 235, 255 }));
+    gameMaps.push_back(std::make_unique<Map>(12, 12, layerNumber, SDL_Color{ 65, 202, 165, 255 }));
+    gameMaps.push_back(std::make_unique<Map>(50, 50, layerNumber, SDL_Color{ 114, 50, 50, 255 }));
+
 
     TileRegistry::registerType(0, "Void", renderer, "assets/void.png");
     TileRegistry::registerType(1, "Grass", renderer, "assets/grass.png");
     TileRegistry::registerType(2, "Sand", renderer, "assets/sand.png");
     TileRegistry::registerType(3, "Water", renderer, "assets/water.png");
     TileRegistry::registerType(4, "Stone", renderer, "assets/stone.png");
-    TileRegistry::registerType(5, "Lily pad", renderer, "assets/water_lily_pad.png");
-    TileRegistry::registerType(6, "Mountains", renderer, "assets/mountains.png");
+    TileRegistry::registerType(5, "Red Stone", renderer, "assets/red_stone.png");
+    TileRegistry::registerType(6, "Lily pad", renderer, "assets/water_lily_pad.png");
+    TileRegistry::registerType(7, "Mountains", renderer, "assets/mountains.png");
 
     // Fill the map with texture tiles
     // Create a simple checkerboard pattern
@@ -101,15 +113,25 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
         }
     }
 
-        for (int layer = 0; layer < 1; ++layer) {
+    for (int layer = 0; layer < 1; ++layer) {
         for (int y = 0; y < 12; ++y) {
             for (int x = 0; x < 12; ++x) {
                 if ((x + y) % 2 == 0) {
-                    // Use grass texture for even positions
                     gameMaps[1]->setTile(x, y, layer, 2);
                 } else {
-                    // Use sand texture for odd positions
                     gameMaps[1]->setTile(x, y, layer, 3);
+                }
+            }
+        }
+    }
+
+    for (int layer = 0; layer < 1; ++layer) {
+        for (int y = 0; y < 50; ++y) {
+            for (int x = 0; x < 50; ++x) {
+                if ((x + y) % 2 == 0) {
+                    gameMaps[2]->setTile(x, y, layer, 4);
+                } else {
+                    gameMaps[2]->setTile(x, y, layer, 5);
                 }
             }
         }
@@ -122,6 +144,7 @@ SDL_AppResult IsoEngine::EngineInit(void **appstate, int argc, char *argv[])
     // Center the camera on the map
     gameMaps[0]->setCamera(-WIN_WIDTH/2.0f, -WIN_HEIGHT/4.0f);
     gameMaps[1]->setCamera(-WIN_WIDTH/2.0f, -WIN_HEIGHT/4.0f);
+    gameMaps[2]->setCamera(-WIN_WIDTH/2.0f, -WIN_HEIGHT/4.0f);
 
     uiManager = std::make_unique<UIDebug>(this);
 
@@ -143,7 +166,7 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
         mouseY = static_cast<int>(event->motion.y);
         
         int gridX, gridY;
-        if (gameMaps[activeMapIndex]->getSelectedTile(mouseX, mouseY, gameMaps[activeMapIndex]->getCameraX(), gameMaps[activeMapIndex]->getCameraY(), gridX, gridY)) {
+        if (gameMaps[activeMapIndex]->getSelectedTile(mouseX, mouseY, gridX, gridY)) {
             selectedTileX = gridX;
             selectedTileY = gridY;
         } else { // No valid tile selected
@@ -184,6 +207,15 @@ SDL_AppResult IsoEngine::EngineEvent(void *appstate, SDL_Event *event)
         }
     }
 
+    // Reset camera zoom
+    if (event->type == SDL_EVENT_MOUSE_WHEEL) {
+        if (event->wheel.y > 0) {
+            gameMaps[activeMapIndex]->zoomCamera(1.05f);
+        } else if (event->wheel.y < 0) {
+            gameMaps[activeMapIndex]->zoomCamera(0.95f);
+        }
+    }
+
     if(event->type == SDL_EVENT_WINDOW_RESIZED) {
         // move camera to center
         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
@@ -203,7 +235,7 @@ SDL_AppResult IsoEngine::EngineIterate(void *appstate)
     uiManager->update();
 
     // Clear screen to sky blue
-    SDL_SetRenderDrawColor(renderer, 135, 206, 235, 255);
+    SDL_SetRenderDrawColor(renderer, gameMaps[activeMapIndex]->getBackgroundColor().r, gameMaps[activeMapIndex]->getBackgroundColor().g, gameMaps[activeMapIndex]->getBackgroundColor().b, gameMaps[activeMapIndex]->getBackgroundColor().a);
     SDL_RenderClear(renderer);
 
     // Render the map
@@ -215,15 +247,16 @@ SDL_AppResult IsoEngine::EngineIterate(void *appstate)
             // Get the actual tile at this position
             Tile* selectedTile = gameMaps[activeMapIndex]->getTile(selectedTileX, selectedTileY, selectedLayer);
             if (selectedTile) {
-                // Use the exact same positioning as the tile itself
-                int tileScreenX = selectedTile->getScreenX();
-                int tileScreenY = selectedTile->getScreenY();
 
-                const float CURSOR_SIZE = 64.0f;
-                
+                // Get zoom factor
+                float zoom = gameMaps[activeMapIndex]->getCameraZoom();
+
+                // Calculate cursor size with zoom
+                const float CURSOR_SIZE = 64.0f * zoom;
+
                 // Apply the same camera offset as the map does
-                float cursorX = static_cast<float>(tileScreenX - CURSOR_SIZE * 0.5) - gameMaps[activeMapIndex]->getCameraX();
-                float cursorY = static_cast<float>(tileScreenY) - gameMaps[activeMapIndex]->getCameraY();
+                float cursorX = (selectedTile->getScreenX() * zoom) - CURSOR_SIZE * 0.5f - gameMaps[activeMapIndex]->getCameraX();
+                float cursorY = (selectedTile->getScreenY() * zoom) - gameMaps[activeMapIndex]->getCameraY();
 
                 SDL_FRect cursorRect = {
                     cursorX,

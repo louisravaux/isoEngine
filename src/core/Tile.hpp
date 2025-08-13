@@ -13,10 +13,14 @@ private:
     int tileID; // ID of the tile type
     int gridX, gridY;    // Position in tile grid (0,0), (1,0), etc.
     int screenX, screenY; // Actual screen position in pixels
+    
+    // tile render size
+    int width;
+    int height;
 
 public:
     // Constructor to initialize the tile with a texture, ID, and position
-    Tile(int id, int posX, int posY);
+    Tile(int id, int posX, int posY, int width, int height);
 
     // Destructor to clean up the texture
     ~Tile();
@@ -26,6 +30,8 @@ public:
 
     // Getters for tile properties
     int getID() const;
+    int getWidth() const;
+    int getHeight() const;
     int getGridX() const;
     int getGridY() const;
     int getScreenX() const;

@@ -55,6 +55,9 @@ void UIDebug::content() {
 
     if(ImGui::CollapsingHeader("Map Info", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Text("Active Map: %d", engine->activeMapIndex);
+        //map color 
+        ImGui::Text("Map BG Color: (%d, %d, %d, %d)", engine->gameMaps[engine->activeMapIndex]->getBackgroundColor().r, engine->gameMaps[engine->activeMapIndex]->getBackgroundColor().g, engine->gameMaps[engine->activeMapIndex]->getBackgroundColor().b, engine->gameMaps[engine->activeMapIndex]->getBackgroundColor().a);
+        ImGui::ColorButton("##MapBGColor", ImVec4(engine->gameMaps[engine->activeMapIndex]->getBackgroundColor().r / 255.0f, engine->gameMaps[engine->activeMapIndex]->getBackgroundColor().g / 255.0f, engine->gameMaps[engine->activeMapIndex]->getBackgroundColor().b / 255.0f, engine->gameMaps[engine->activeMapIndex]->getBackgroundColor().a / 255.0f));
         // change map
         if (ImGui::Button("Next Map")) {
             engine->activeMapIndex = (engine->activeMapIndex + 1) % engine->gameMaps.size();
@@ -73,7 +76,7 @@ void UIDebug::content() {
 
         for (const auto& tile : TileRegistry::getAllTypes()) {
             int id = TileRegistry::getTileID(tile);
-            std::string label = tile->getName() + "##" + std::to_string(id);
+            std::string label = std::to_string(id) + " " + tile->getName() + "##" + std::to_string(id);
             // "##" avoids ImGui ID conflicts when names repeat
 
             // Highlight the selected one

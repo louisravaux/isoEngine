@@ -10,16 +10,22 @@ class Map {
 private:
     int mapWidth, mapHeight, numLayers;                                    // Dimensions of the map in tiles
     std::vector<std::vector<std::vector<std::unique_ptr<Tile>>>> tiles;      // 3D grid of tiles
-    
+
+    SDL_Color backgroundColor;
+
     // Camera/viewport for scrolling
     float cameraX, cameraY;
-    
+    float cameraZoom = 1.0f; // Zoom factor for camera
+
+    // tile render size
+    float tileWidth, tileHeight;
+
     // Helper method to check if coordinates are valid
     bool isValidPosition(int x, int y) const;
 
 public:
     // Constructor - creates empty map
-    Map(int width, int height, int numLayers);
+    Map(int width, int height, int numLayers, SDL_Color bgColor);
     
     // Destructor
     ~Map();
@@ -40,6 +46,8 @@ public:
     // Camera control
     void setCamera(float x, float y);
     void moveCamera(float deltaX, float deltaY);
+    void zoomCamera(float zoomFactor);
+    float getCameraZoom() const;
     float getCameraX() const;
     float getCameraY() const;
     
@@ -47,8 +55,10 @@ public:
     int getWidth() const;
     int getHeight() const;
     int getLayerCount() const;
-    bool getSelectedTile(int screenX, int screenY, float cameraX, float cameraY, int& gridX, int& gridY) const;
-    
+    bool getSelectedTile(int screenX, int screenY, int& gridX, int& gridY) const;
+    SDL_Color getBackgroundColor() const;
+    void setBackgroundColor(const SDL_Color& color);
+
     // Utility methods
     void clearMap();
     void fillWithTile(int tileID, int layer);
