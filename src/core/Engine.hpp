@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Map.hpp"
+#include "core/Level.hpp"
 #include "SDL3/SDL_init.h"
 #include <SDL3/SDL.h>
 #include <memory>
@@ -39,9 +39,8 @@ public:
     int selectedLayer = 0;
 
     // Game objects
-    int activeMapIndex = 0;
-    std::vector<std::unique_ptr<Map>> gameMaps;
-    //std::unique_ptr<Map> gameMap;
+    int activeLevelIndex = 0;
+    std::vector<std::unique_ptr<Level>> gameLevels;
 
     SDL_Window* getWindow() const;
 

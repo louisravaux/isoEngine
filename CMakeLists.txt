@@ -40,6 +40,7 @@ add_executable(isoEngine
     src/main.cpp
     src/core/Engine.cpp
     src/core/Map.cpp
+    src/core/Level.cpp
     src/core/Tile.cpp
     src/core/TileRegistry.cpp
     src/core/TileType.cpp
